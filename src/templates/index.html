@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📝 Task Manager</h1>
+            <p class="subtitle">Simple task management with MongoDB backend</p>
+        </header>
+
+        <!-- Statistics -->
+        <div class="stats">
+            <div class="stat-card">
+                <span class="stat-number">{{ total_tasks }}</span>
+                <span class="stat-label">Total Tasks</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">{{ pending_tasks }}</span>
+                <span class="stat-label">Pending</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">{{ completed_tasks }}</span>
+                <span class="stat-label">Completed</span>
+            </div>
+        </div>
+
+        <!-- Create Task Form -->
+        <div class="create-task">
+            <form action="{{ url_for('create_task') }}" method="POST">
+                <input 
+                    type="text" 
+                    name="title" 
+                    placeholder="Enter a new task..." 
+                    required 
+                    autofocus
+                    class="task-input"
+                >
+                <button type="submit" class="btn btn-primary">Add Task</button>
+            </form>
+        </div>
+
+        <!-- Task List -->
+        <div class="task-list">
+            {% if tasks %}
+                {% for task in tasks %}
+                <div class="task-item {% if task.completed %}completed{% endif %}">
+                    <div class="task-content">
+                        <form action="{{ url_for('complete_task', task_id=task._id) }}" method="POST" class="task-check-form">
+                            <input 
+                                type="checkbox" 
+                                {% if task.completed %}checked{% endif %}
+                                onchange="this.form.submit()"
+                                class="task-checkbox"
+                            >
+                        </form>
+                        <div class="task-info">
+                            <span class="task-title">{{ task.title }}</span>
+                            <span class="task-meta">
+                                Created: {{ task.created_at.strftime('%Y-%m-%d %H:%M') }} UTC
+                                {% if task.created_by_pod %}
+                                    by pod: <strong>{{ task.created_by_pod }}</strong>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <form action="{{ url_for('delete_task', task_id=task._id) }}" method="POST" class="task-delete-form">
+                        <button type="submit" class="btn btn-danger">
+                            🗑️ Delete
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>🎉 No tasks yet! Create your first task above.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Delete All Button -->
+        {% if tasks %}
+        <div class="delete-all">
+            <form action="{{ url_for('delete_all_tasks') }}" method="POST">
+                <button 
+                    type="submit" 
+                    class="btn btn-danger-outline">
+                    🗑️ Clear All Completed Tasks
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Pod Info (for Kubernetes load balancing demonstration) -->
+        <footer>
+            <div class="pod-info">
+                <strong>Served by:</strong> Pod <code>{{ pod_name }}</code> ({{ pod_ip }})
+                <br>
+                <small>💡 Refresh the page multiple times to see different pods handling requests (load balancing)</small>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

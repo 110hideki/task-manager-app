@@ -1,0 +1,53 @@
+version: '3.8'
+
+# ⚠️ WARNING: THIS FILE IS FOR LOCAL TESTING ONLY
+# DO NOT use these credentials in production!
+# This file demonstrates the MONGODB_URI connection method
+# Production credentials should be stored in:
+# - AWS: Secrets Manager
+# - GCP: Secret Manager
+# - Azure: Key Vault
+
+services:
+  mongodb:
+    image: mongo:4.4
+    container_name: task-manager-mongodb-auth
+    ports:
+      - "27017:27017"
+    environment:
+      # ⚠️ DEMO CREDENTIALS - DO NOT USE IN PRODUCTION
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: taskdb
+    networks:
+      - task-manager-network
+    volumes:
+      - mongodb-data-auth:/data/db
+
+  app:
+    build: .
+    container_name: task-manager-app-uri
+    ports:
+      - "5002:5000"
+    environment:
+      # ⚠️ DEMO CREDENTIALS - DO NOT USE IN PRODUCTION
+      # Test MONGODB_URI method (same as cnap-tech-exercise-aws)
+      # In production, use Kubernetes Secrets from cloud KMS
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/taskdb?authSource=admin
+      - SECRET_KEY=test-secret-key-for-mongodb-uri
+    depends_on:
+      - mongodb
+    networks:
+      - task-manager-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  task-manager-network:
+    driver: bridge
+
+volumes:
+  mongodb-data-auth:
