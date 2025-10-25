@@ -98,8 +98,21 @@ pip install -r requirements.txt
 ```
 
 4. **Set environment variables for remote MongoDB**
+
+**Option A: Individual Variables (Recommended)**
 ```bash
-# Connect to remote MongoDB server (production example)
+# Clear and maintainable configuration
+export MONGODB_USERNAME="admin"
+export MONGODB_PASSWORD="your-secure-password"
+export MONGODB_HOSTNAME="your-mongodb-server.com"
+export MONGODB_PORT="27017"
+export MONGODB_DBNAME="taskdb"
+export SECRET_KEY="your-secure-secret-key"
+```
+
+**Option B: Connection String (Legacy)**
+```bash
+# Full connection string (for backward compatibility)
 export MONGODB_URI="mongodb://admin:your-password@your-mongodb-server.com:27017/taskdb?authSource=admin"
 export SECRET_KEY="your-secure-secret-key"
 ```
@@ -120,8 +133,10 @@ http://localhost:5000
 For local development and debugging, you can run MongoDB in the same environment:
 
 ```bash
-# For local debugging with local MongoDB (no authentication)
-export MONGODB_URI="mongodb://localhost:27017/taskdb"
+# For local development with non-authenticated MongoDB
+export MONGODB_HOSTNAME="localhost"
+export MONGODB_PORT="27017"
+export MONGODB_DBNAME="taskdb"
 export SECRET_KEY="development-secret-key"
 
 # Run the application
@@ -142,7 +157,19 @@ docker build -t task-manager-app:latest .
 ### Run Container
 
 ```bash
-# Primary use case: Connect to remote MongoDB server
+# Primary use case: Connect to remote MongoDB server using individual variables (recommended)
+docker run -d \
+  --name task-manager \
+  -p 5000:5000 \
+  -e MONGODB_USERNAME="admin" \
+  -e MONGODB_PASSWORD="your-secure-password" \
+  -e MONGODB_HOSTNAME="your-mongodb-server" \
+  -e MONGODB_PORT="27017" \
+  -e MONGODB_DBNAME="taskdb" \
+  -e SECRET_KEY="your-secure-secret-key" \
+  task-manager-app:latest
+
+# Alternative: Using connection string (backward compatibility)
 docker run -d \
   --name task-manager \
   -p 5000:5000 \
@@ -154,7 +181,9 @@ docker run -d \
 docker run -d \
   --name task-manager \
   -p 5000:5000 \
-  -e MONGODB_URI="mongodb://host.docker.internal:27017/taskdb" \
+  -e MONGODB_HOSTNAME="host.docker.internal" \
+  -e MONGODB_PORT="27017" \
+  -e MONGODB_DBNAME="taskdb" \
   -e SECRET_KEY="dev-secret-key" \
   task-manager-app:latest
 ```
@@ -174,30 +203,71 @@ docker push 110hideki/task-manager-app:latest
 
 ## 🔧 Configuration
 
-### Essential Environment Variables
+### MongoDB Connection Methods
 
-The application requires two environment variables for remote MongoDB connection:
+The application supports two configuration methods (in priority order):
+
+#### Method 1: Individual Variables (Recommended ⭐)
+
+Clear, maintainable, and secure configuration:
 
 | Variable | Description | Example | Required |
 |----------|-------------|---------|----------|
-| `MONGODB_URI` | **Remote MongoDB connection string** | `mongodb://user:pass@remote-host:27017/taskdb?authSource=admin` | **Yes** |
-| `SECRET_KEY` | **Flask session secret key** | `your-secret-key-here` | **Yes** |
+| `MONGODB_USERNAME` | **MongoDB username** | `admin` | Yes* |
+| `MONGODB_PASSWORD` | **MongoDB password** | `securePass123` | Yes* |
+| `MONGODB_HOSTNAME` | **MongoDB hostname/IP** | `mongodb.example.com` | Yes* |
+| `MONGODB_PORT` | **MongoDB port** | `27017` | No (default: 27017) |
+| `MONGODB_DBNAME` | **Database name** | `taskdb` | No (default: taskdb) |
 
-### Optional Environment Variables
+*Required for authenticated connections
+
+**Benefits**:
+- ✅ Clear and understandable components  
+- ✅ Easier credential rotation
+- ✅ Reduces URI formatting errors
+- ✅ Better for Kubernetes secrets management
+- ✅ Environment-specific overrides
+
+#### Method 2: Connection String (Backward Compatibility)
+
+Legacy method using full connection string:
+
+| Variable | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `MONGODB_URI` | **Full connection string** | `mongodb://user:pass@host:27017/db?authSource=admin` | Yes* |
+
+*Used only if individual variables are not provided
+
+### Flask Configuration
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
+| `SECRET_KEY` | **Flask session secret key** | Auto-generated (dev only) | **Yes (production)** |
 | `PORT` | Application port | `5000` | No |
 
-### Example Configuration
+### Example Configurations
 
+**Production (Individual Variables)**
 ```bash
-# Production: Connect to remote MongoDB server
+export MONGODB_USERNAME="admin"
+export MONGODB_PASSWORD="securePassword123"
+export MONGODB_HOSTNAME="mongodb-cluster.example.com"
+export MONGODB_PORT="27017"
+export MONGODB_DBNAME="taskdb"
+export SECRET_KEY="your-secure-secret-key-here"
+```
+
+**Production (Connection String - Legacy)**
+```bash
 export MONGODB_URI="mongodb://admin:password@mongodb-server.example.com:27017/taskdb?authSource=admin"
 export SECRET_KEY="your-secure-secret-key-here"
+```
 
-# Local debugging: Connect to local MongoDB
-export MONGODB_URI="mongodb://localhost:27017/taskdb"
+**Local Development (No Authentication)**
+```bash
+export MONGODB_HOSTNAME="localhost"
+export MONGODB_PORT="27017"
+export MONGODB_DBNAME="taskdb"
 export SECRET_KEY="development-secret-key"
 
 # Optional

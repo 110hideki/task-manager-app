@@ -19,9 +19,9 @@ services:
     ports:
       - "5001:5000"
     environment:
-      MONGODB_HOST: mongodb
+      MONGODB_HOSTNAME: mongodb
       MONGODB_PORT: 27017
-      MONGODB_DATABASE: taskdb
+      MONGODB_DBNAME: taskdb
       PORT: 5000
       SECRET_KEY: dev-secret-key-change-in-production-12345678901234567890
     depends_on:

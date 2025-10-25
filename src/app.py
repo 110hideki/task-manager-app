@@ -34,15 +34,15 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 # csrf = CSRFProtect(app)  # Disabled for demo - enable in production
 
 # MongoDB Configuration from environment variables
-# Supports two methods:
-# 1. MONGODB_URI: Full connection string (e.g., "mongodb://user:pass@host:port/db?authSource=admin")
-# 2. Individual variables: MONGODB_HOST, MONGODB_PORT, MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_DATABASE
-MONGODB_URI = os.getenv('MONGODB_URI', '')
-MONGODB_HOST = os.getenv('MONGODB_HOST', 'localhost')
-MONGODB_PORT = int(os.getenv('MONGODB_PORT', '27017'))
+# Supports two methods (in priority order):
+# 1. Individual variables: MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_HOSTNAME, MONGODB_PORT, MONGODB_DBNAME (recommended)
+# 2. MONGODB_URI: Full connection string (fallback for backward compatibility)
 MONGODB_USERNAME = os.getenv('MONGODB_USERNAME', '')
 MONGODB_PASSWORD = os.getenv('MONGODB_PASSWORD', '')
-MONGODB_DATABASE = os.getenv('MONGODB_DATABASE', 'taskdb')
+MONGODB_HOSTNAME = os.getenv('MONGODB_HOSTNAME', os.getenv('MONGODB_HOST', 'localhost'))  # Support both new and old names
+MONGODB_PORT = int(os.getenv('MONGODB_PORT', '27017'))
+MONGODB_DBNAME = os.getenv('MONGODB_DBNAME', os.getenv('MONGODB_DATABASE', 'taskdb'))  # Support both new and old names
+MONGODB_URI = os.getenv('MONGODB_URI', '')  # Fallback for backward compatibility
 
 # Pod information for load balancing demonstration
 POD_NAME = os.getenv('HOSTNAME', 'local')
@@ -52,29 +52,31 @@ POD_IP = os.getenv('POD_IP', 'localhost')
 def get_db_connection():
     """
     Create and return MongoDB connection.
-    Supports two configuration methods:
-    1. MONGODB_URI environment variable (takes precedence)
-    2. Individual MONGODB_* environment variables
+    Supports two configuration methods (in priority order):
+    1. Individual variables: MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_HOSTNAME, MONGODB_PORT, MONGODB_DBNAME (recommended)
+    2. MONGODB_URI environment variable (fallback for backward compatibility)
     """
     try:
-        # Method 1: Use MONGODB_URI if provided (existing cnap-tech-exercise-aws approach)
-        if MONGODB_URI:
+        # Method 1: Build connection string from individual variables (new primary method)
+        if MONGODB_USERNAME and MONGODB_PASSWORD and MONGODB_HOSTNAME:
+            connection_string = f"mongodb://{MONGODB_USERNAME}:{MONGODB_PASSWORD}@{MONGODB_HOSTNAME}:{MONGODB_PORT}/{MONGODB_DBNAME}?authSource=admin"
+            logger.info(f"Using individual variables for authenticated connection to {MONGODB_HOSTNAME}:{MONGODB_PORT}")
+        # Method 2: Use MONGODB_URI if provided and no individual variables (backward compatibility)
+        elif MONGODB_URI:
             connection_string = MONGODB_URI
-            logger.info("Using MONGODB_URI for connection")
-        # Method 2: Build connection string from individual variables (new approach)
-        elif MONGODB_USERNAME and MONGODB_PASSWORD:
-            connection_string = f"mongodb://{MONGODB_USERNAME}:{MONGODB_PASSWORD}@{MONGODB_HOST}:{MONGODB_PORT}/{MONGODB_DATABASE}?authSource=admin"
-            logger.info(f"Using authenticated connection to {MONGODB_HOST}:{MONGODB_PORT}")
-        # Method 3: Non-authenticated connection (local development)
+            logger.info("Using MONGODB_URI for connection (backward compatibility)")
+        # Method 3: Non-authenticated connection using hostname only (local development)
+        elif MONGODB_HOSTNAME:
+            connection_string = f"mongodb://{MONGODB_HOSTNAME}:{MONGODB_PORT}/{MONGODB_DBNAME}"
+            logger.info(f"Using non-authenticated connection to {MONGODB_HOSTNAME}:{MONGODB_PORT}")
         else:
-            connection_string = f"mongodb://{MONGODB_HOST}:{MONGODB_PORT}/{MONGODB_DATABASE}"
-            logger.info(f"Using non-authenticated connection to {MONGODB_HOST}:{MONGODB_PORT}")
+            raise Exception("No MongoDB connection configuration found. Please set either individual variables (MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_HOSTNAME) or MONGODB_URI")
         
         client = MongoClient(connection_string, serverSelectionTimeoutMS=5000)
         # Test connection
         client.admin.command('ping')
         logger.info(f"Successfully connected to MongoDB")
-        return client[MONGODB_DATABASE]
+        return client[MONGODB_DBNAME]
     except ConnectionFailure as e:
         logger.error(f"Failed to connect to MongoDB: {e}")
         raise

@@ -6,34 +6,26 @@ This document describes all environment variables used by the Task Manager appli
 
 The application supports **three methods** for MongoDB connection configuration. The methods are checked in priority order:
 
-### Method 1: MONGODB_URI (Priority #1) ⭐ Recommended for Kubernetes
+### Method 1: Individual Variables (Priority #1) ⭐ Recommended
 
-**Use case**: Standard Kubernetes deployment pattern
+**Use case**: Clear, maintainable configuration with improved security
 
-**Format**: Full MongoDB connection string
-
-**Option A: With database name (explicit)**
+**Variables**:
 ```bash
-MONGODB_URI="mongodb://admin:password@host:27017/taskdb?authSource=admin"
+MONGODB_USERNAME="admin"
+MONGODB_PASSWORD="securepassword123"
+MONGODB_HOSTNAME="mongodb-host.example.com"
+MONGODB_PORT="27017"
+MONGODB_DBNAME="taskdb"
 ```
 
-**Option B: Without database name (also supported)**
-```bash
-MONGODB_URI="mongodb://admin:password@host:27017/?authSource=admin"
-```
+**Benefits**:
+- ✅ Clear and understandable individual components
+- ✅ Easier to manage and rotate credentials
+- ✅ Reduces URI formatting errors
+- ✅ Better for secret management (individual secrets)
+- ✅ Environment-specific overrides (e.g., different hostnames per environment)
 
-**Note**: Both formats work correctly. The application will use the `taskdb` database regardless:
-- Option A: MongoDB driver uses `taskdb` from the URI
-- Option B: Application code explicitly selects `taskdb` using `client[MONGODB_DATABASE]`
-
-**Kubernetes Secret Example:**
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mongodb-secret
-type: Opaque
-data:
   MONGODB_URI: bW9uZ29kYjovL2FkbWluOnBhc3N3b3JkMTIzQG1vbmdvZGItaG9zdDoyNzAxNy90YXNrZGI/YXV0aFNvdXJjZT1hZG1pbg==
   SECRET_KEY: eW91ci1zZWNyZXQta2V5LWhlcmU=
 ```
@@ -43,41 +35,27 @@ data:
 echo -n "mongodb://admin:password123@10.0.3.40:27017/taskdb?authSource=admin" | base64
 ```
 
-**Deployment Example:**
-```yaml
-env:
-  - name: MONGODB_URI
-    valueFrom:
-      secretKeyRef:
-        name: mongodb-secret
-        key: MONGODB_URI
-  - name: SECRET_KEY
-    valueFrom:
-      secretKeyRef:
-        name: mongodb-secret
-        key: SECRET_KEY
-```
 
-### Method 2: Individual Variables (Alternative for Kubernetes)
+### Method 2: MONGODB_URI (Backward Compatibility)
 
-Build the connection string from individual components.
+**Use case**: Legacy deployments or when you already have a complete connection string
+
+**Format**: Full MongoDB connection string
 
 ```bash
-MONGODB_HOST="mongodb-host"
-MONGODB_PORT="27017"
-MONGODB_USERNAME="admin"
-MONGODB_PASSWORD="password123"
-MONGODB_DATABASE="taskdb"
+MONGODB_URI="mongodb://admin:password@host:27017/taskdb?authSource=admin"
 ```
+
+**Note**: This method is maintained for backward compatibility. New deployments should use Method 1 (individual variables).
 
 ### Method 3: Non-Authenticated (Local Development)
 
 For local development with MongoDB running without authentication.
 
 ```bash
-MONGODB_HOST="localhost"
+MONGODB_HOSTNAME="localhost"
 MONGODB_PORT="27017"
-MONGODB_DATABASE="taskdb"
+MONGODB_DBNAME="taskdb"
 ```
 
 **Docker Compose Example:**
@@ -85,10 +63,10 @@ MONGODB_DATABASE="taskdb"
 services:
   app:
     environment:
-      - MONGODB_HOST=mongodb
+      - MONGODB_HOSTNAME=mongodb
       - MONGODB_PORT=27017
-      - MONGODB_DATABASE=taskdb
-      # No username/password needed
+      - MONGODB_DBNAME=taskdb
+      # No username/password needed for local dev
 ```
 
 ## All Environment Variables
@@ -97,14 +75,18 @@ services:
 
 | Variable | Description | Default | Example | Required |
 |----------|-------------|---------|---------|----------|
-| `MONGODB_URI` | Full connection string (Method 1) | - | `mongodb://user:pass@host:27017/db?authSource=admin` | No* |
-| `MONGODB_HOST` | MongoDB hostname/IP (Method 2/3) | `localhost` | `mongodb-0.mongodb` | No* |
-| `MONGODB_PORT` | MongoDB port (Method 2/3) | `27017` | `27017` | No |
-| `MONGODB_USERNAME` | MongoDB username (Method 2) | - | `admin` | No* |
-| `MONGODB_PASSWORD` | MongoDB password (Method 2) | - | `securepass123` | No* |
-| `MONGODB_DATABASE` | Database name | `taskdb` | `taskdb` | No |
+| `MONGODB_USERNAME` | MongoDB username (Method 1) | - | `admin` | No* |
+| `MONGODB_PASSWORD` | MongoDB password (Method 1) | - | `securepass123` | No* |
+| `MONGODB_HOSTNAME` | MongoDB hostname/IP (Method 1/3) | `localhost` | `mongodb-0.mongodb` | No* |
+| `MONGODB_PORT` | MongoDB port (Method 1/3) | `27017` | `27017` | No |
+| `MONGODB_DBNAME` | Database name (Method 1/3) | `taskdb` | `taskdb` | No |
+| `MONGODB_URI` | Full connection string (Method 2 - legacy) | - | `mongodb://user:pass@host:27017/db?authSource=admin` | No* |
 
 *At least one connection method must be configured
+
+**Backward Compatibility**: The application also supports the old variable names:
+- `MONGODB_HOST` (mapped to `MONGODB_HOSTNAME`)
+- `MONGODB_DATABASE` (mapped to `MONGODB_DBNAME`)
 
 ### Flask Configuration
 
@@ -118,9 +100,9 @@ services:
 
 The application checks for MongoDB connection in this order:
 
-1. **MONGODB_URI** - If set, uses this connection string (ignores all other MongoDB variables)
-2. **MONGODB_USERNAME + MONGODB_PASSWORD** - If both set, builds authenticated connection string
-3. **MONGODB_HOST only** - If no credentials, uses non-authenticated connection
+1. **Individual Variables** - If `MONGODB_USERNAME`, `MONGODB_PASSWORD`, and `MONGODB_HOSTNAME` are all set
+2. **MONGODB_URI** - If set and individual variables are not complete (backward compatibility)
+3. **MONGODB_HOSTNAME only** - If no credentials, uses non-authenticated connection
 
 
 ### 3. Local Development (docker-compose)

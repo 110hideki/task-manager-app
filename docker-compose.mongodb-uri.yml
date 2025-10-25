@@ -1,14 +1,12 @@
 version: '3.8'
 
-# ⚠️ WARNING: THIS FILE IS FOR LOCAL TESTING ONLY
-# DO NOT use these credentials in production!
-# This file demonstrates the MONGODB_URI connection method
-# Production credentials should be stored in:
-# - AWS: Secrets Manager
-# - GCP: Secret Manager
-# - Azure: Key Vault
+# This file demonstrates different MongoDB connection methods
+# Choose the appropriate method for your deployment:
+# 1. Individual variables (recommended)
+# 2. MONGODB_URI (backward compatibility)
 
 services:
+  # MongoDB with authentication
   mongodb:
     image: mongo:4.4
     container_name: task-manager-mongodb-auth
@@ -24,17 +22,42 @@ services:
     volumes:
       - mongodb-data-auth:/data/db
 
-  app:
+  # Method 1: Individual variables (recommended approach)
+  app-individual-vars:
     build: .
-    container_name: task-manager-app-uri
+    container_name: task-manager-app-individual
     ports:
       - "5002:5000"
     environment:
       # ⚠️ DEMO CREDENTIALS - DO NOT USE IN PRODUCTION
-      # Test MONGODB_URI method (same as cnap-tech-exercise-aws)
       # In production, use Kubernetes Secrets from cloud KMS
-      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/taskdb?authSource=admin
-      - SECRET_KEY=test-secret-key-for-mongodb-uri
+      MONGODB_USERNAME: admin
+      MONGODB_PASSWORD: password123
+      MONGODB_HOSTNAME: mongodb
+      MONGODB_PORT: 27017
+      MONGODB_DBNAME: taskdb
+      SECRET_KEY: test-secret-key-for-individual-vars
+    depends_on:
+      - mongodb
+    networks:
+      - task-manager-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Method 2: MONGODB_URI (backward compatibility)
+  app-uri:
+    build: .
+    container_name: task-manager-app-uri
+    ports:
+      - "5003:5000"
+    environment:
+      # ⚠️ DEMO CREDENTIALS - DO NOT USE IN PRODUCTION
+      # Test MONGODB_URI method (backward compatibility)
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/taskdb?authSource=admin
+      SECRET_KEY: test-secret-key-for-mongodb-uri
     depends_on:
       - mongodb
     networks:
