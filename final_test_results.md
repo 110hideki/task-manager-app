@@ -167,14 +167,15 @@ Total: 21 files
 ├── docker-compose.mongodb-uri.yml  ⚠️ Demo credentials (local test only)
 ├── docker-compose.yml
 ├── docs/
-│   ├── DEPLOYMENT_INTEGRATION.md
-│   ├── ENVIRONMENT_VARIABLES.md
-│   ├── FUTURE_ENHANCEMENTS.md
-│   ├── KUBERNETES_DEPLOYMENT.md
-│   ├── MONGODB_URI_EXAMPLES.md
+│   ├── deployment_integration.md
+│   ├── environment_variables.md
+│   ├── future_enhancements.md
+│   ├── mongodb_uri_examples.md
+│   ├── mongodb_uri_format.md
 │   ├── README.md
-│   ├── SECURITY_BEST_PRACTICES.md
-│   └── SUMMARY.md
+│   ├── security_best_practices.md
+│   ├── summary.md
+│   └── url_mismatch_resolution.md
 ├── requirements.txt
 ├── src/
 │   ├── app.py
@@ -225,7 +226,7 @@ The script performs 10 automated tests:
 
 ### Before Production Deployment
 
-1. ✅ Read `docs/SECURITY_BEST_PRACTICES.md`
+1. ✅ Read `docs/security_best_practices.md`
 2. ✅ Store credentials in cloud KMS (AWS Secrets Manager / GCP Secret Manager)
 3. ✅ Generate strong passwords (16+ characters)
 4. ✅ Use `MONGODB_URI` method for Kubernetes deployment
