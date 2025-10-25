@@ -1,6 +1,6 @@
 # Task Manager App
 
-A simple web application for managing tasks, built with Flask and MongoDB. Designed to demonstrate stateless application architecture, Kubernetes deployment, and load balancing across multiple cloud providers (AWS EKS, GCP GKE, Azure AKS).
+A simple web application for managing tasks, built with Flask and MongoDB. Designed to demonstrate stateless application architecture and container deployment.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11-blue.svg)
@@ -8,13 +8,11 @@ A simple web application for managing tasks, built with Flask and MongoDB. Desig
 
 ## 🎯 Purpose
 
-This application is part of a DevOps portfolio project demonstrating:
+This application demonstrates:
 - **Stateless application design** with external state management
-- **Container orchestration** on Kubernetes
-- **Multi-cloud deployment** (AWS, GCP, Azure)
-- **CI/CD pipelines** with GitHub Actions
-- **Load balancing** and horizontal scaling
-- **Infrastructure as Code** integration
+- **Container deployment** patterns
+- **MongoDB integration** with proper environment configuration
+- **Production-ready** Flask application structure
 
 ## ✨ Features
 
@@ -22,10 +20,8 @@ This application is part of a DevOps portfolio project demonstrating:
 - ✅ **Web UI**: Clean, responsive HTML interface
 - ✅ **MongoDB Backend**: Persistent storage for tasks
 - ✅ **Stateless Design**: Multiple instances share the same database
-- ✅ **Health Checks**: Liveness and readiness probes for Kubernetes
-- ✅ **Pod Identification**: See which pod handled each request
+- ✅ **Health Checks**: Liveness and readiness probes
 - ✅ **Production Ready**: Gunicorn WSGI server, non-root container user
-- ✅ **Multi-Cloud Compatible**: Works on AWS EKS, GCP GKE, Azure AKS
 
 ## 📸 Screenshot
 
@@ -49,15 +45,15 @@ This application is part of a DevOps portfolio project demonstrating:
 
 ```
 ┌─────────────────────────────────────────┐
-│         Kubernetes Service              │
-│         (Load Balancer)                 │
+│         Load Balancer                   │
+│         (Optional)                      │
 └────────────┬────────────────────────────┘
              │
     ┌────────┼────────┐
     │        │        │
 ┌───▼───┐ ┌──▼──┐ ┌──▼──┐
-│ Pod 1 │ │Pod 2│ │Pod 3│
-│ Flask │ │Flask│ │Flask│
+│App    │ │App  │ │App  │
+│Instance│ │Inst.│ │Inst.│
 └───┬───┘ └──┬──┘ └──┬──┘
     │        │       │
     └────────┼───────┘
@@ -99,12 +95,8 @@ pip install -r requirements.txt
 
 4. **Set environment variables**
 ```bash
-export MONGODB_HOST=localhost
-export MONGODB_PORT=27017
-export MONGODB_DATABASE=taskdb
-# Optional: If MongoDB requires authentication
-export MONGODB_USERNAME=admin
-export MONGODB_PASSWORD=yourpassword
+export MONGODB_URI="mongodb://localhost:27017/taskdb"
+export SECRET_KEY="your-development-secret-key"
 ```
 
 5. **Run the application**
@@ -129,24 +121,20 @@ docker build -t task-manager-app:latest .
 ### Run Container
 
 ```bash
-# Run with local MongoDB
+# Run with MongoDB connection
 docker run -d \
   --name task-manager \
   -p 5000:5000 \
-  -e MONGODB_HOST=host.docker.internal \
-  -e MONGODB_PORT=27017 \
-  -e MONGODB_DATABASE=taskdb \
+  -e MONGODB_URI="mongodb://admin:password@host:27017/taskdb?authSource=admin" \
+  -e SECRET_KEY="your-secure-secret-key" \
   task-manager-app:latest
 
-# Run with MongoDB authentication
+# For local development with local MongoDB (no auth)
 docker run -d \
   --name task-manager \
   -p 5000:5000 \
-  -e MONGODB_HOST=mongodb-host \
-  -e MONGODB_PORT=27017 \
-  -e MONGODB_USERNAME=admin \
-  -e MONGODB_PASSWORD=yourpassword \
-  -e MONGODB_DATABASE=taskdb \
+  -e MONGODB_URI="mongodb://host.docker.internal:27017/taskdb" \
+  -e SECRET_KEY="dev-secret-key" \
   task-manager-app:latest
 ```
 
@@ -163,72 +151,44 @@ docker tag task-manager-app:latest 110hideki/task-manager-app:latest
 docker push 110hideki/task-manager-app:latest
 ```
 
-## ☸️ Kubernetes Deployment
-
-This application is designed to be deployed on Kubernetes. See the infrastructure repositories for deployment manifests:
-
-- **AWS EKS**: [cnap-tech-exercise-aws](https://github.com/110hideki/cnap-tech-exercise-aws)
-- **GCP GKE**: [cnap-tech-exercise-gcp](https://github.com/110hideki/cnap-tech-exercise-gcp)
-
-### Basic Kubernetes Deployment
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: task-manager
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: task-manager
-  template:
-    metadata:
-      labels:
-        app: task-manager
-    spec:
-      containers:
-      - name: task-manager
-        image: 110hideki/task-manager-app:latest
-        ports:
-        - containerPort: 5000
-        env:
-        - name: MONGODB_HOST
-          value: "mongodb-service"
-        - name: MONGODB_PORT
-          value: "27017"
-        - name: MONGODB_DATABASE
-          value: "taskdb"
-```
-
 ## 🔧 Configuration
 
-### Environment Variables
+### Essential Environment Variables
+
+The application requires two environment variables for MongoDB connection:
+
+| Variable | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `MONGODB_URI` | **MongoDB connection string** | `mongodb://user:pass@host:27017/taskdb?authSource=admin` | **Yes** |
+| `SECRET_KEY` | **Flask session secret key** | `your-secret-key-here` | **Yes** |
+
+### Optional Environment Variables
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `MONGODB_URI` | **Full MongoDB connection string** (takes precedence over individual variables) | - | No* |
-| `MONGODB_HOST` | MongoDB server hostname/IP | `localhost` | No* |
-| `MONGODB_PORT` | MongoDB server port | `27017` | No |
-| `MONGODB_USERNAME` | MongoDB username | - | No* |
-| `MONGODB_PASSWORD` | MongoDB password | - | No* |
-| `MONGODB_DATABASE` | Database name | `taskdb` | No |
-| `SECRET_KEY` | Flask session secret key | - | Yes** |
 | `PORT` | Application port | `5000` | No |
 
-**Connection Methods (choose one):**
-1. **Method 1 (Recommended for Kubernetes)**: Set `MONGODB_URI` with full connection string
-   - Example: `mongodb://admin:password@hostname:27017/taskdb?authSource=admin`
-   - Compatible with existing `cnap-tech-exercise-aws` deployment
-2. **Method 2 (Alternative)**: Set individual variables (`MONGODB_HOST`, `MONGODB_USERNAME`, `MONGODB_PASSWORD`)
-3. **Method 3 (Local dev)**: Just set `MONGODB_HOST` (no authentication)
+### Example Configuration
 
-*At least one connection method must be configured  
-**Required for production; auto-generated in development
+```bash
+# Required environment variables
+export MONGODB_URI="mongodb://admin:password@localhost:27017/taskdb?authSource=admin"
+export SECRET_KEY="your-secure-secret-key-here"
 
-For detailed examples, see:
-- [ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md) - Complete variable reference
-- [MONGODB_URI_EXAMPLES.md](docs/MONGODB_URI_EXAMPLES.md) - Examples for AWS/GCP deployment
+# Optional
+export PORT=5000
+```
+
+### Docker Environment Variables
+
+```bash
+docker run -d \
+  --name task-manager \
+  -p 5000:5000 \
+  -e MONGODB_URI="mongodb://admin:password@host:27017/taskdb?authSource=admin" \
+  -e SECRET_KEY="your-secure-secret-key" \
+  task-manager-app:latest
+```
 
 ## 📊 MongoDB Schema
 
@@ -320,12 +280,8 @@ task-manager-app/
 - ✅ **No secrets in code** (environment variables)
 - ✅ **Minimal base image** (Python 3.11-slim)
 - ✅ **Health check endpoint** (container monitoring)
-- ✅ **Cloud KMS integration** (AWS Secrets Manager / GCP Secret Manager)
-- ✅ **Kubernetes Secret injection** (no hardcoded credentials)
 
-⚠️ **Important**: See [SECURITY_BEST_PRACTICES.md](docs/SECURITY_BEST_PRACTICES.md) for production security guidelines.
-
-**Note**: The test file `docker-compose.mongodb-uri.yml` contains demo credentials (`admin:password123`) for local testing only. These are clearly marked with warnings and must NEVER be used in production.
+⚠️ **Important**: Never hardcode credentials in code. Always use environment variables for sensitive information.
 
 ## 🚦 CI/CD Pipeline
 
@@ -363,45 +319,14 @@ MIT License - See LICENSE file for details
 - Portfolio Project: DevOps Engineer
 - GitHub: [@110hideki](https://github.com/110hideki)
 
-## � Deployment
-
-This application is designed to be deployed via infrastructure repositories:
-
-### Infrastructure Repositories
-- **AWS**: [cnap-tech-exercise-aws](https://github.com/110hideki/cnap-tech-exercise-aws) - EKS deployment with Terraform
-- **GCP**: [cnap-tech-exercise-gcp](https://github.com/110hideki/cnap-tech-exercise-gcp) - GKE deployment with Terraform
-
-### How Deployment Works
-
-The infrastructure repositories manage:
-- Kubernetes cluster provisioning
-- MongoDB deployment with authentication
-- **Credential injection** from cloud KMS (AWS Secrets Manager / GCP Secret Manager)
-- Kubernetes manifests with secrets management
-- Load balancer configuration
-
-See [DEPLOYMENT_INTEGRATION.md](docs/DEPLOYMENT_INTEGRATION.md) for detailed information on how MongoDB credentials are injected into the container at runtime.
-
-### Container Image
-
-- **Docker Hub**: `110hideki/task-manager-app:latest`
-- **Build**: Automatic via GitHub Actions
-- **Platforms**: linux/amd64, linux/arm64
-
-## �🔗 Related Projects
-
-- [cnap-tech-exercise-aws](https://github.com/110hideki/cnap-tech-exercise-aws) - AWS EKS infrastructure
-- [cnap-tech-exercise-gcp](https://github.com/110hideki/cnap-tech-exercise-gcp) - GCP GKE infrastructure
-
 ## 📚 What I Learned
 
 Building this project taught me:
 - Stateless application design patterns
-- Container orchestration with Kubernetes
-- Multi-cloud deployment strategies
-- CI/CD pipeline automation
-- Infrastructure as Code principles
-- Load balancing and horizontal scaling
+- Container deployment strategies
+- MongoDB integration patterns
+- Flask web application development
+- Production-ready application structure
 
 ## 🎯 Future Enhancements (Phase 2)
 
@@ -416,4 +341,4 @@ Building this project taught me:
 
 ---
 
-**Built with ❤️ for learning DevOps and cloud-native architecture**
+**Built with ❤️ for learning Flask and MongoDB integration**
