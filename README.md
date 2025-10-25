@@ -1,6 +1,6 @@
 # Task Manager App
 
-A simple web application for managing tasks, built with Flask and MongoDB. Designed to demonstrate stateless application architecture and container deployment.
+A simple web application for managing tasks, built with Flask and MongoDB. Designed to connect to remote MongoDB instances and demonstrate stateless application architecture.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11-blue.svg)
@@ -9,17 +9,18 @@ A simple web application for managing tasks, built with Flask and MongoDB. Desig
 ## 🎯 Purpose
 
 This application demonstrates:
+- **Remote MongoDB connectivity** with secure authentication
 - **Stateless application design** with external state management
 - **Container deployment** patterns
-- **MongoDB integration** with proper environment configuration
 - **Production-ready** Flask application structure
+- **Multi-instance scaling** with shared remote database
 
 ## ✨ Features
 
+- ✅ **Remote MongoDB Connection**: Connects to external MongoDB instances
 - ✅ **Simple Task Management**: Create, complete, and delete tasks
 - ✅ **Web UI**: Clean, responsive HTML interface
-- ✅ **MongoDB Backend**: Persistent storage for tasks
-- ✅ **Stateless Design**: Multiple instances share the same database
+- ✅ **Stateless Design**: Multiple instances share the same remote database
 - ✅ **Health Checks**: Liveness and readiness probes
 - ✅ **Production Ready**: Gunicorn WSGI server, non-root container user
 
@@ -57,22 +58,25 @@ This application demonstrates:
 └───┬───┘ └──┬──┘ └──┬──┘
     │        │       │
     └────────┼───────┘
-             │
+             │ (Remote Connection)
+             │ MONGODB_URI
       ┌──────▼──────┐
       │   MongoDB   │
-      │  (Shared)   │
+      │ Remote Server│
       └─────────────┘
 ```
+
+**Key Design**: Multiple application instances connect to a **shared remote MongoDB server**, enabling true stateless scaling.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - Python 3.11+
-- MongoDB running locally or remotely
-- Docker (optional, for containerization)
+- **Remote MongoDB server** with authentication configured
+- Docker (recommended for deployment)
 
-### Local Development
+### Remote MongoDB Connection (Primary Use Case)
 
 1. **Clone the repository**
 ```bash
@@ -93,10 +97,11 @@ venv\Scripts\activate  # On Windows
 pip install -r requirements.txt
 ```
 
-4. **Set environment variables**
+4. **Set environment variables for remote MongoDB**
 ```bash
-export MONGODB_URI="mongodb://localhost:27017/taskdb"
-export SECRET_KEY="your-development-secret-key"
+# Connect to remote MongoDB server (production example)
+export MONGODB_URI="mongodb://admin:your-password@your-mongodb-server.com:27017/taskdb?authSource=admin"
+export SECRET_KEY="your-secure-secret-key"
 ```
 
 5. **Run the application**
@@ -110,6 +115,22 @@ python app.py
 http://localhost:5000
 ```
 
+### Local Development/Debugging (Optional)
+
+For local development and debugging, you can run MongoDB in the same environment:
+
+```bash
+# For local debugging with local MongoDB (no authentication)
+export MONGODB_URI="mongodb://localhost:27017/taskdb"
+export SECRET_KEY="development-secret-key"
+
+# Run the application
+cd src
+python app.py
+```
+
+**Note**: This is primarily for testing the application's MongoDB connectivity patterns before deploying to production with a remote MongoDB server.
+
 ## 🐳 Docker
 
 ### Build Image
@@ -121,15 +142,15 @@ docker build -t task-manager-app:latest .
 ### Run Container
 
 ```bash
-# Run with MongoDB connection
+# Primary use case: Connect to remote MongoDB server
 docker run -d \
   --name task-manager \
   -p 5000:5000 \
-  -e MONGODB_URI="mongodb://admin:password@host:27017/taskdb?authSource=admin" \
+  -e MONGODB_URI="mongodb://admin:password@your-mongodb-server:27017/taskdb?authSource=admin" \
   -e SECRET_KEY="your-secure-secret-key" \
   task-manager-app:latest
 
-# For local development with local MongoDB (no auth)
+# For local debugging only (MongoDB in same environment)
 docker run -d \
   --name task-manager \
   -p 5000:5000 \
@@ -155,11 +176,11 @@ docker push 110hideki/task-manager-app:latest
 
 ### Essential Environment Variables
 
-The application requires two environment variables for MongoDB connection:
+The application requires two environment variables for remote MongoDB connection:
 
 | Variable | Description | Example | Required |
 |----------|-------------|---------|----------|
-| `MONGODB_URI` | **MongoDB connection string** | `mongodb://user:pass@host:27017/taskdb?authSource=admin` | **Yes** |
+| `MONGODB_URI` | **Remote MongoDB connection string** | `mongodb://user:pass@remote-host:27017/taskdb?authSource=admin` | **Yes** |
 | `SECRET_KEY` | **Flask session secret key** | `your-secret-key-here` | **Yes** |
 
 ### Optional Environment Variables
@@ -171,9 +192,13 @@ The application requires two environment variables for MongoDB connection:
 ### Example Configuration
 
 ```bash
-# Required environment variables
-export MONGODB_URI="mongodb://admin:password@localhost:27017/taskdb?authSource=admin"
+# Production: Connect to remote MongoDB server
+export MONGODB_URI="mongodb://admin:password@mongodb-server.example.com:27017/taskdb?authSource=admin"
 export SECRET_KEY="your-secure-secret-key-here"
+
+# Local debugging: Connect to local MongoDB
+export MONGODB_URI="mongodb://localhost:27017/taskdb"
+export SECRET_KEY="development-secret-key"
 
 # Optional
 export PORT=5000
@@ -182,10 +207,11 @@ export PORT=5000
 ### Docker Environment Variables
 
 ```bash
+# Production: Remote MongoDB server
 docker run -d \
   --name task-manager \
   -p 5000:5000 \
-  -e MONGODB_URI="mongodb://admin:password@host:27017/taskdb?authSource=admin" \
+  -e MONGODB_URI="mongodb://admin:password@remote-mongodb-server:27017/taskdb?authSource=admin" \
   -e SECRET_KEY="your-secure-secret-key" \
   task-manager-app:latest
 ```
