@@ -173,7 +173,7 @@ env:
   - name: MONGODB_URI
     valueFrom:
       secretKeyRef:
-        name: tasky-db-secret
+        name: task-manager-db-secret
         key: MONGODB_URI
 ```
 

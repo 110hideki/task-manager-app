@@ -71,7 +71,7 @@ echo -n "mongodb://admin:SecurePass123@10.0.3.40:27017/taskdb?authSource=admin" 
 apiVersion: v1
 kind: Secret
 metadata:
-  name: tasky-db-secret
+  name: task-manager-db-secret
 data:
   MONGODB_URI: bW9uZ29kYjovL2FkbWluOlNlY3VyZVBhc3MxMjNAMTAuMC4zLjQwOjI3MDE3L3Rhc2tkYj9hdXRoU291cmNlPWFkbWlu
 ```
@@ -90,7 +90,7 @@ echo -n "mongodb://admin:password123@10.0.3.40:27017/?authSource=admin" | base64
 apiVersion: v1
 kind: Secret
 metadata:
-  name: tasky-db-secret
+  name: task-manager-db-secret
 data:
   MONGODB_URI: bW9uZ29kYjovL2FkbWluOnBhc3N3b3JkMTIzQDEwLjAuMy40MDoyNzAxNy8/YXV0aFNvdXJjZT1hZG1pbg==
 ```

@@ -62,9 +62,9 @@ locals {
 
 **Step 3**: Create Kubernetes Secret
 ```hcl
-resource "kubernetes_secret" "tasky_db_secret" {
+resource "kubernetes_secret" "task_manager_db_secret" {
   metadata {
-    name = "tasky-db-secret"
+    name = "task-manager-db-secret"
   }
   data = {
     MONGODB_URI = local.mongodb_uri
@@ -168,7 +168,7 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
-  resourceNames: ["tasky-db-secret"]  # Specific secret only
+  resourceNames: ["task-manager-db-secret"]  # Specific secret only
   verbs: ["get"]
 ```
 
@@ -421,7 +421,7 @@ Each environment should have:
 1. **Rotate ALL credentials immediately**
    ```bash
    ./rotate-mongodb-password.sh
-   kubectl delete secret tasky-db-secret
+   kubectl delete secret task-manager-db-secret
    ./create-secret.sh  # With new password
    kubectl rollout restart deployment/task-manager
    ```
@@ -466,7 +466,7 @@ git log -p | grep -i "password\|secret\|mongodb://"
 trufflehog git file://. --only-verified
 
 # Check Kubernetes secret encryption
-kubectl get secrets tasky-db-secret -o yaml
+kubectl get secrets task-manager-db-secret -o yaml
 
 # Verify non-root user
 kubectl exec -it deployment/task-manager -- id

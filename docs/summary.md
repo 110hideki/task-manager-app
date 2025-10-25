@@ -42,7 +42,7 @@ MONGODB_URI="mongodb://admin:password@host:27017/taskdb?authSource=admin"
 apiVersion: v1
 kind: Secret
 metadata:
-  name: tasky-db-secret
+  name: task-manager-db-secret
 data:
   MONGODB_URI: bW9uZ29kYjovL2FkbWluOnBhc3N3b3JkQGhvc3Q6MjcwMTcvdGFza2RiP2F1dGhTb3VyY2U9YWRtaW4=
   SECRET_KEY: eW91ci1zZWNyZXQta2V5
@@ -54,7 +54,7 @@ env:
   - name: MONGODB_URI
     valueFrom:
       secretKeyRef:
-        name: tasky-db-secret
+        name: task-manager-db-secret
         key: MONGODB_URI
 ```
 
@@ -163,16 +163,16 @@ terraform.tfvars:
   mongodb_admin_username = "admin"
   mongodb_admin_password = "SecurePass123"
 
-app/eks/tasky-secret.yaml:
+app/eks/task-manager-secret.yaml:
   MONGODB_URI: mongodb://admin:SecurePass123@10.0.3.40:27017/taskdb?authSource=admin (base64)
 
-app/eks/tasky-deployment.yaml:
+app/eks/task-manager-deployment.yaml:
   image: 110hideki/task-manager-app:latest
   env:
     - name: MONGODB_URI
       valueFrom:
         secretKeyRef:
-          name: tasky-db-secret
+          name: task-manager-db-secret
           key: MONGODB_URI
 ```
 
@@ -234,8 +234,8 @@ Logs show: `Using MONGODB_URI for connection`
 
 ```bash
 # Deploy to cluster (managed by infrastructure repo)
-kubectl apply -f tasky-secret.yaml
-kubectl apply -f tasky-deployment.yaml
+kubectl apply -f task-manager-secret.yaml
+kubectl apply -f task-manager-deployment.yaml
 
 # Verify
 kubectl get pods
@@ -262,10 +262,10 @@ kubectl logs -l app=task-manager | grep "Using"
    └─ terraform apply
 
 3. Kubernetes Secret created
-   └─ kubectl get secret tasky-db-secret
+   └─ kubectl get secret task-manager-db-secret
 
 4. Deploy application
-   └─ kubectl apply -f tasky-deployment.yaml
+   └─ kubectl apply -f task-manager-deployment.yaml
 
 5. Pods start with injected credentials
    └─ env vars: MONGODB_URI or MONGODB_USERNAME/PASSWORD
@@ -278,7 +278,7 @@ kubectl logs -l app=task-manager | grep "Using"
 
 ```bash
 # Check secret exists
-kubectl get secret tasky-db-secret
+kubectl get secret task-manager-db-secret
 
 # Check environment variables in pod (without exposing values)
 kubectl exec -it deployment/task-manager -- printenv | grep MONGODB
