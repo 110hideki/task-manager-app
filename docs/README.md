@@ -68,37 +68,6 @@ For production deployments:
 3. Use strong, randomly generated passwords
 4. Follow the deployment guides for proper secret injection
 
-## 🚀 Quick Navigation
-
-### I want to...
-
-**Deploy to AWS EKS:**
-1. Read [mongodb_configuration.md](mongodb_configuration.md) - Understand URI formats
-2. Follow the `cnap-tech-exercise-aws` repository for deployment
-3. Review [security_best_practices.md](security_best_practices.md)
-
-**Deploy to GCP GKE:**
-1. Read [mongodb_configuration.md](mongodb_configuration.md) - Understand URI formats
-2. Follow the `cnap-tech-exercise-gcp` repository for deployment
-3. Review [security_best_practices.md](security_best_practices.md)
-
-**Understand environment variables:**
-→ [environment_variables.md](environment_variables.md)
-
-**Configure MongoDB connection:**
-→ [environment_variables.md](environment_variables.md) - See the 3 connection methods
-
-**Troubleshoot deployment:**
-→ [deployment_integration.md](deployment_integration.md) - Architecture and integration patterns
-
-**Secure the application:**
-→ [security_best_practices.md](security_best_practices.md)
-
-**Plan future enhancements:**
-→ [future_enhancements.md](future_enhancements.md)
-
-**See project overview:**
-→ [summary.md](summary.md)
 
 ## 📖 Reading Order
 
