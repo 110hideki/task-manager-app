@@ -10,10 +10,11 @@ This directory contains comprehensive documentation for the Task Manager applica
 
 ### Deployment Guides
 
-- **[mongodb_uri_examples.md](mongodb_uri_examples.md)** ⭐ **Start here for deployment**
-  - Step-by-step guide for AWS and GCP deployment
-  - How to create secrets from Terraform variables
-  - Scripts and automation examples
+- **[mongodb_configuration.md](mongodb_configuration.md)** ⭐ **Start here for MongoDB setup**
+  - URI format explanations (both formats supported)
+  - Kubernetes secret creation examples
+  - Testing and verification commands
+  - References to cloud-specific deployment guides
 
 - **[deployment_integration.md](deployment_integration.md)**
   - Architecture overview
@@ -27,11 +28,6 @@ This directory contains comprehensive documentation for the Task Manager applica
   - All 3 MongoDB connection methods explained
   - Examples for each method
   - Docker Compose and Kubernetes examples
-
-- **[mongodb_uri_format.md](mongodb_uri_format.md)** ℹ️ **Format clarification**
-  - Explains both MONGODB_URI formats (with and without `/taskdb`)
-  - How the application handles each format
-  - Testing examples for both formats
 
 ### Security
 
@@ -77,13 +73,13 @@ For production deployments:
 ### I want to...
 
 **Deploy to AWS EKS:**
-1. Read [mongodb_uri_examples.md](mongodb_uri_examples.md) - AWS section
-2. Follow the step-by-step guide
+1. Read [mongodb_configuration.md](mongodb_configuration.md) - Understand URI formats
+2. Follow the `cnap-tech-exercise-aws` repository for deployment
 3. Review [security_best_practices.md](security_best_practices.md)
 
 **Deploy to GCP GKE:**
-1. Read [mongodb_uri_examples.md](mongodb_uri_examples.md) - GCP section
-2. Choose Option 1 (MONGODB_URI) or Option 2 (individual variables)
+1. Read [mongodb_configuration.md](mongodb_configuration.md) - Understand URI formats
+2. Follow the `cnap-tech-exercise-gcp` repository for deployment
 3. Review [security_best_practices.md](security_best_practices.md)
 
 **Understand environment variables:**
@@ -110,7 +106,7 @@ For first-time users:
 
 1. **[../README.md](../README.md)** - Understand what the app does
 2. **[summary.md](summary.md)** - See the big picture
-3. **[mongodb_uri_examples.md](mongodb_uri_examples.md)** - Deploy to your cloud
+3. **[mongodb_configuration.md](mongodb_configuration.md)** - Deploy to your cloud
 4. **[security_best_practices.md](security_best_practices.md)** - Secure your deployment
 5. **[environment_variables.md](environment_variables.md)** - Reference when needed
 

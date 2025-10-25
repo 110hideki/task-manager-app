@@ -171,11 +171,10 @@ Total: 21 files
 │   ├── environment_variables.md
 │   ├── future_enhancements.md
 │   ├── mongodb_uri_examples.md
-│   ├── mongodb_uri_format.md
+│   ├── mongodb_configuration.md
 │   ├── README.md
 │   ├── security_best_practices.md
-│   ├── summary.md
-│   └── url_mismatch_resolution.md
+│   └── summary.md
 ├── requirements.txt
 ├── src/
 │   ├── app.py
